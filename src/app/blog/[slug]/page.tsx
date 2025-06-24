@@ -1,28 +1,25 @@
+// src/app/blog/[slug]/page.tsx
+
 import { BlogPostContent } from "@/components/BlogPostContent";
 import { CommentSection } from "@/components/CommentSection";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { RelatedPosts } from "@/components/RelatedPosts";
 import { config } from "@/config";
-import { signOgImageUrl } from "@/lib/og-image";
-import { wisp } from "@/lib/wisp";
+import { getPostBySlug, getRelatedPosts, getStrapiMedia } from "@/lib/strapi";
 import { notFound } from "next/navigation";
 import type { BlogPosting, WithContext } from "schema-dts";
 
-export async function generateMetadata(props: { params: Promise<Params> }) {
-  const params = await props.params;
+export async function generateMetadata(props: { params: { slug: string } }) {
+  const { slug } = props.params;
+  const post = await getPostBySlug(slug);
 
-  const { slug } = params;
-
-  const result = await wisp.getPost(slug);
-  if (!result || !result.post) {
-    return {
-      title: "Blog post not found",
-    };
+  if (!post) {
+    return { title: "Post não encontrado" };
   }
 
-  const { title, description, image } = result.post;
-  const generatedOgImage = signOgImageUrl({ title, brand: config.blog.name });
+  const { title, description } = post.attributes;
+  const postImage = getStrapiMedia(post.attributes.image);
 
   return {
     title,
@@ -30,40 +27,41 @@ export async function generateMetadata(props: { params: Promise<Params> }) {
     openGraph: {
       title,
       description,
-      images: image ? [generatedOgImage, image] : [generatedOgImage],
+      images: postImage ? [postImage] : [],
     },
   };
 }
+
 interface Params {
   slug: string;
 }
 
-const Page = async (props: { params: Promise<Params> }) => {
-  const params = await props.params;
+const Page = async (props: { params: Params }) => {
+  const { slug } = props.params;
+  const post = await getPostBySlug(slug);
 
-  const { slug } = params;
-
-  const result = await wisp.getPost(slug);
-  const { posts } = await wisp.getRelatedPosts({ slug, limit: 3 });
-
-  if (!result || !result.post) {
+  if (!post) {
     return notFound();
   }
 
-  const { title, publishedAt, updatedAt, image, author } = result.post;
+  const { title, publishedAt, updatedAt, image, author } = post.attributes;
+
+  // Lógica para buscar posts relacionados: Pega a primeira tag do post e busca outros com a mesma tag.
+  const firstTagSlug = post.attributes.tags?.data[0]?.attributes.slug;
+  const relatedPosts = firstTagSlug ? await getRelatedPosts(post.id, firstTagSlug) : [];
+  
+  const authorName = author?.data?.attributes?.name;
+  const authorImage = getStrapiMedia(author?.data?.attributes?.picture);
+  const postImage = getStrapiMedia(image);
 
   const jsonLd: WithContext<BlogPosting> = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     headline: title,
-    image: image ? image : undefined,
-    datePublished: publishedAt ? publishedAt.toString() : undefined,
-    dateModified: updatedAt.toString(),
-    author: {
-      "@type": "Person",
-      name: author.name ?? undefined,
-      image: author.image ?? undefined,
-    },
+    image: postImage || undefined,
+    datePublished: publishedAt,
+    dateModified: updatedAt,
+    author: authorName ? { "@type": "Person", name: authorName, image: authorImage || undefined } : undefined,
   };
 
   return (
@@ -75,8 +73,8 @@ const Page = async (props: { params: Promise<Params> }) => {
       <div className="container mx-auto px-5">
         <Header />
         <div className="max-w-prose mx-auto text-xl">
-          <BlogPostContent post={result.post} />
-          <RelatedPosts posts={posts} />
+          <BlogPostContent post={post} />
+          <RelatedPosts posts={relatedPosts} />
           <CommentSection slug={slug} />
         </div>
         <Footer />

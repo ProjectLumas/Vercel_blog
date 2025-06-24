@@ -1,72 +1,55 @@
+// src/components/BlogPostsPagination.tsx
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
+  PaginationEllipsis,
 } from "@/components/ui/pagination";
+
+interface StrapiPagination {
+  page: number;
+  pageSize: number;
+  pageCount: number;
+  total: number;
+}
 
 export const BlogPostsPagination = ({
   pagination,
   basePath = "/?page=",
-  numSiblingPages = 2,
 }: {
   basePath?: string;
-  numSiblingPages?: number;
-  pagination: {
-    page: number;
-    limit: number | "all";
-    totalPages: number;
-    nextPage: number | null;
-    prevPage: number | null;
-  };
+  pagination: StrapiPagination;
 }) => {
+  if (pagination.pageCount <= 1) {
+    return null;
+  }
+
+  // Gera a lista de números de página a serem exibidos
+  const pages = Array.from({ length: pagination.pageCount }, (_, i) => i + 1);
+
   return (
     <Pagination>
       <PaginationContent>
-        {pagination.prevPage && (
+        {pagination.page > 1 && (
           <PaginationItem>
-            <PaginationPrevious href={`${basePath}${pagination.prevPage}`} />
+            <PaginationPrevious href={`${basePath}${pagination.page - 1}`} />
           </PaginationItem>
         )}
-        {pagination.page > 3 && (
-          <>
-            <PaginationItem>
-              <PaginationLink href={`${basePath}1`}>1</PaginationLink>
-            </PaginationItem>
-            <PaginationEllipsis />
-          </>
-        )}
-        {Array.from({ length: pagination.totalPages }, (_, index) => index + 1)
-          .filter(
-            (pageNumber) =>
-              Math.abs(pagination.page - pageNumber) <= numSiblingPages
-          )
-          .map((pageNumber) => (
-            <PaginationItem key={pageNumber}>
-              <PaginationLink
-                href={`${basePath}${pageNumber}`}
-                isActive={pageNumber === pagination.page}
-              >
-                {pageNumber}
-              </PaginationLink>
-            </PaginationItem>
-          ))}
-        {pagination.page < pagination.totalPages - 2 && (
-          <>
-            <PaginationEllipsis />
-            <PaginationItem>
-              <PaginationLink href={`${basePath}${pagination.totalPages}`}>
-                {pagination.totalPages}
-              </PaginationLink>
-            </PaginationItem>
-          </>
-        )}
-        {pagination.nextPage && (
+
+        {pages.map((pageNumber) => (
+          <PaginationItem key={pageNumber}>
+            <PaginationLink href={`${basePath}${pageNumber}`} isActive={pageNumber === pagination.page}>
+              {pageNumber}
+            </PaginationLink>
+          </PaginationItem>
+        ))}
+        
+        {pagination.page < pagination.pageCount && (
           <PaginationItem>
-            <PaginationNext href={`${basePath}${pagination.nextPage}`} />
+            <PaginationNext href={`${basePath}${pagination.page + 1}`} />
           </PaginationItem>
         )}
       </PaginationContent>

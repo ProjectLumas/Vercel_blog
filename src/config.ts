@@ -1,11 +1,18 @@
+// src/config.ts
+
 const buildConfig = () => {
-  const blogId = process.env.NEXT_PUBLIC_BLOG_ID;
-  if (!blogId) throw new Error("NEXT_PUBLIC_BLOG_ID is missing");
-  const name = process.env.NEXT_PUBLIC_BLOG_DISPLAY_NAME || "Travel.";
-  const copyright = process.env.NEXT_PUBLIC_BLOG_COPYRIGHT || "Samantha";
+  // A URL da sua API Strapi, vinda do arquivo .env.local
+  const strapiApiUrl = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+  if (!strapiApiUrl) {
+    throw new Error("A variável NEXT_PUBLIC_STRAPI_API_URL não foi definida no seu arquivo .env.local");
+  }
+
+  // Mantemos as outras configurações que o template já usa
+  const name = process.env.NEXT_PUBLIC_BLOG_DISPLAY_NAME || "Seu Blog";
+  const copyright = process.env.NEXT_PUBLIC_BLOG_COPYRIGHT || "Seu Nome";
   const defaultTitle =
-    process.env.NEXT_DEFAULT_METADATA_DEFAULT_TITLE || "Travel with Samantha";
-  const defaultDescription = process.env.NEXT_PUBLIC_BLOG_DESCRIPTION || "Blog about travel and lifestyle.";
+    process.env.NEXT_DEFAULT_METADATA_DEFAULT_TITLE || "Título do Blog";
+  const defaultDescription = process.env.NEXT_PUBLIC_BLOG_DESCRIPTION || "Descrição do Blog.";
 
   return {
     baseUrl: process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
@@ -21,12 +28,13 @@ const buildConfig = () => {
         description: defaultDescription,
       },
     },
+    strapi: {
+      url: strapiApiUrl,
+    },
+    // Mantemos o segredo para a geração de imagens, pois é um recurso útil
     ogImageSecret:
       process.env.OG_IMAGE_SECRET ||
-      "secret_used_for_signing_and_verifying_the_og_image_url",
-    wisp: {
-      blogId,
-    },
+      "secret_utilizado_para_proteger_a_geracao_de_imagens",
   };
 };
 

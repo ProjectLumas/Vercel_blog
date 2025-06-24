@@ -1,40 +1,50 @@
+
+
 "use client";
 import { cn } from "@/lib/utils";
-import { GetPostsResult } from "@/lib/wisp";
+import { getStrapiMedia } from "@/lib/strapi";
+import { StrapiPost } from "@/types/strapi";
 import { formatDate } from "date-fns";
 import Image from "next/image";
 import Link from "next/link";
 import { FunctionComponent } from "react";
 
-export const BlogPostPreview: FunctionComponent<{
-  post: GetPostsResult["posts"][0];
-}> = ({ post }) => {
+// Este componente renderiza UM ÚNICO item da lista.
+const BlogPostPreviewItem: FunctionComponent<{ post: StrapiPost }> = ({ post }) => {
+  // Verificação de segurança
+  if (!post) return null;
+
+  // ALTERAÇÃO CRUCIAL: Acessamos as propriedades diretamente do 'post'.
+  const { Title, Slug, Description, publishedAt, updatedAt, Media, tags } = post;
+  const imageUrl = getStrapiMedia(Media);
+
   return (
     <div className="break-words">
-      <Link href={`/blog/${post.slug}`}>
+      <Link href={`/blog/${Slug}`}>
         <div className="aspect-[16/9] relative">
           <Image
-            alt={post.title}
+            alt={Title || 'Imagem do post'}
             className="object-cover"
-            src={post.image || "/images/placeholder.webp"}
+            src={imageUrl || "/images/placeholder.webp"}
             fill
           />
         </div>
       </Link>
       <div className="grid grid-cols-1 gap-3 md:col-span-2 mt-4">
         <h2 className="font-sans font-semibold tracking-tighter text-primary text-2xl md:text-3xl">
-          <Link href={`/blog/${post.slug}`}>{post.title}</Link>
+          <Link href={`/blog/${Slug}`}>{Title}</Link>
         </h2>
         <div className="prose lg:prose-lg italic tracking-tighter text-muted-foreground">
-          {formatDate(post.publishedAt || post.updatedAt, "dd MMMM yyyy")}
+          {formatDate(new Date(publishedAt || updatedAt), "dd MMMM yyyy")}
         </div>
         <div className="prose lg:prose-lg leading-relaxed md:text-lg line-clamp-4 text-muted-foreground">
-          {post.description}
+          {Description}
         </div>
         <div className="text-sm text-muted-foreground">
-          {post.tags.map((tag) => (
+          {/* ALTERAÇÃO CRUCIAL: Acessamos as tags diretamente */}
+          {tags?.map((tag) => (
             <div key={tag.id} className="mr-2 inline-block">
-              <Link href={`/tag/${tag.name}`}>#{tag.name}</Link>
+              <Link href={`/tag/${tag.Slug}`}>#{tag.Name}</Link>
             </div>
           ))}
         </div>
@@ -43,10 +53,15 @@ export const BlogPostPreview: FunctionComponent<{
   );
 };
 
+// Este é o componente "pai" que renderiza a lista.
 export const BlogPostsPreview: FunctionComponent<{
-  posts: GetPostsResult["posts"];
+  posts: StrapiPost[];
   className?: string;
 }> = ({ posts, className }) => {
+  if (!Array.isArray(posts)) {
+    return <p>Erro: posts não é um array.</p>;
+  }
+  
   return (
     <div
       className={cn(
@@ -55,7 +70,7 @@ export const BlogPostsPreview: FunctionComponent<{
       )}
     >
       {posts.map((post) => (
-        <BlogPostPreview key={post.id} post={post} />
+        <BlogPostPreviewItem key={post?.id} post={post} />
       ))}
     </div>
   );
