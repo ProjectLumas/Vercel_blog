@@ -1,34 +1,44 @@
+// src/types/strapi.d.ts
+
 interface StrapiMediaAttributes {
   url: string;
+  alternativeText?: string;
 }
 interface StrapiMedia {
-  data: { attributes: StrapiMediaAttributes } | null;
+  data: { id: number; attributes: StrapiMediaAttributes } | null;
 }
+
+// CORREÇÃO: Revertendo para a estrutura com 'attributes'
 export interface StrapiTag {
   id: number;
-  Name: string;
-  Slug: string;
+  attributes: {
+    Name: string;
+    Slug: string;
+  };
 }
 export interface StrapiAuthor {
   id: number;
-  Name: string;
-  picture: StrapiMedia;
+  attributes: {
+    Name: string;
+    picture: StrapiMedia;
+  };
 }
 
-// ALTERAÇÃO CRUCIAL:
-// Removemos a camada "attributes" e colocamos as propriedades diretamente.
+// CORREÇÃO: O post principal também é ajustado para esperar relações com 'attributes'
 export interface StrapiPost {
   id: number;
-  Title: string;
-  Description: string | null;
-  Content: any;
-  Slug: string;
-  createdAt: string;
-  updatedAt: string;
-  publishedAt: string;
-  Media: StrapiMedia | null;
-  author: StrapiAuthor | null;
-  tags: StrapiTag[];
+  attributes: {
+    Title: string;
+    Description: string | null;
+    Content: any;
+    Slug: string;
+    createdAt: string;
+    updatedAt: string;
+    publishedAt: string;
+    Media: StrapiMedia | null;
+    author: { data: StrapiAuthor | null };
+    tags: { data: StrapiTag[] };
+  };
 }
 
 export interface StrapiComment {
@@ -39,4 +49,3 @@ export interface StrapiComment {
     createdAt: string;
   };
 }
-// --- Fim do Código Corrigido ---

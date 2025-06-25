@@ -1,18 +1,15 @@
 // src/lib/strapi.ts
 
 import { config } from "@/config";
-import { StrapiComment, StrapiPost } from "@/types/strapi";
+import { StrapiComment, StrapiPost, StrapiTag } from "@/types/strapi";
 
 // Função auxiliar para construir a URL completa para a API do Strapi
 function getStrapiURL(path = "") {
-  // Garante que não haja barras duplicadas
   if (path.startsWith('/')) {
     path = path.slice(1);
   }
   return `${config.strapi.url}/${path}`;
 }
-
-
 
 // Função para fazer o fetch na API do Strapi de forma segura
 async function fetchApi(path: string, options = {}) {
@@ -21,15 +18,10 @@ async function fetchApi(path: string, options = {}) {
       'Content-Type': 'application/json',
     },
   };
-
   const mergedOptions = {
     ...defaultOptions,
     ...options,
-    // --- LINHA ADICIONADA AQUI ---
-    // Esta opção diz ao Next.js para NÃO guardar a resposta em cache.
-    cache: 'no-store', 
   };
-  
   const requestUrl = getStrapiURL(path);
 
   try {
@@ -63,8 +55,9 @@ export async function getPosts(params: { page?: number; limit?: number; tags?: s
       query.append(`filters[tags][slug][$in][${i}]`, tag);
     });
   }
-
-  const postsRes = await fetchApi(`api/lumas-blogs?${query.toString()}`);
+  
+  // CORREÇÃO: Usando o nome correto do endpoint que definimos no Strapi
+  const postsRes = await fetchApi(`/api/lumas-blogs?${query.toString()}`);
   return postsRes;
 }
 
@@ -75,7 +68,7 @@ export async function getPostBySlug(slug: string): Promise<StrapiPost | null> {
     "populate": "*",
   });
 
-  const postsRes = await fetchApi(`api/lumas-blogs?${query.toString()}`);
+  const postsRes = await fetchApi(`/api/lumas-blogs?${query.toString()}`);
   
   if (postsRes?.data?.length) {
     return postsRes.data[0];
@@ -83,63 +76,42 @@ export async function getPostBySlug(slug: string): Promise<StrapiPost | null> {
   return null;
 }
 
-// Função para buscar comentários de um post específico
-export async function getComments(postSlug: string): Promise<StrapiComment[]> {
-  const query = new URLSearchParams({
-    "filters[post][slug][$eq]": postSlug,
-    "sort[0]": "createdAt:asc",
-  });
-  const commentsRes = await fetchApi(`api/comments?${query.toString()}`);
-  return commentsRes.data;
+// --- NOVAS FUNÇÕES ADICIONADAS AQUI ---
+
+// Função para buscar TODAS as tags
+export async function getTags(): Promise<StrapiTag[]> {
+  const tagsRes = await fetchApi(`/api/tags`);
+  return tagsRes.data;
 }
 
-// Função para criar um novo comentário
-export async function createComment(data: {
-  author: string;
-  email: string;
-  content: string;
-  postSlug: string;
-}) {
-  const post = await getPostBySlug(data.postSlug);
-  if (!post) {
-    throw new Error("Post não encontrado para associar o comentário.");
-  }
-
-  const response = await fetchApi('api/comments', {
-    method: 'POST',
-    body: JSON.stringify({
-      data: {
-        author: data.author,
-        email: data.email,
-        content: data.content,
-        post: post.id,
-      },
-    }),
+// Função para buscar UMA tag específica pelo seu slug
+export async function getTagBySlug(slug: string): Promise<StrapiTag | null> {
+  const query = new URLSearchParams({
+    "filters[slug][$eq]": slug,
   });
-  return response;
+  const tagsRes = await fetchApi(`/api/tags?${query.toString()}`);
+  if (tagsRes?.data?.length) {
+    return tagsRes.data[0];
+  }
+  return null;
+}
+
+// --- FIM DAS NOVAS FUNÇÕES ---
+
+
+// Funções de Comentários
+export async function createComment(data: { author: string; email: string; content: string; postSlug: string; }) {
+  const post = await getPostBySlug(data.postSlug);
+  if (!post) throw new Error("Post não encontrado para associar o comentário.");
+  return fetchApi('api/comments', {
+    method: 'POST',
+    body: JSON.stringify({ data: { author: data.author, email: data.email, content: data.content, post: post.id } }),
+  });
 }
 
 // Função para extrair a URL de uma imagem de forma segura
 export function getStrapiMedia(media: any): string | null {
-  if (!media?.data?.attributes?.url) {
-    return null;
-  }
+  if (!media?.data?.attributes?.url) return null;
   const { url } = media.data.attributes;
   return url.startsWith("/") ? getStrapiURL(url) : url;
-}
-
-// Função de posts relacionados
-
-export async function getRelatedPosts(postId: number, tagSlug: string): Promise<StrapiPost[]> {
-  const query = new URLSearchParams({
-    // Filtra por posts que têm a mesma tag
-    "filters[tags][slug][$eq]": tagSlug,
-    // Filtra para EXCLUIR o post atual da lista de relacionados
-    "filters[id][$ne]": postId.toString(),
-    "pagination[limit]": "3", // Pega no máximo 3 posts
-    "populate": "*",
-  });
-
-  const postsRes = await fetchApi(`/api/lumas-blogs?${query.toString()}`);
-  return postsRes.data;
 }

@@ -1,4 +1,4 @@
-
+// src/components/BlogPostPreview.tsx
 
 "use client";
 import { cn } from "@/lib/utils";
@@ -9,13 +9,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { FunctionComponent } from "react";
 
-// Este componente renderiza UM ÚNICO item da lista.
 const BlogPostPreviewItem: FunctionComponent<{ post: StrapiPost }> = ({ post }) => {
-  // Verificação de segurança
-  if (!post) return null;
+  if (!post?.attributes) return null;
 
-  // ALTERAÇÃO CRUCIAL: Acessamos as propriedades diretamente do 'post'.
-  const { Title, Slug, Description, publishedAt, updatedAt, Media, tags } = post;
+  // CORREÇÃO: Voltamos a acessar através de 'post.attributes'
+  const { Title, Slug, Description, publishedAt, updatedAt, Media, tags } = post.attributes;
   const imageUrl = getStrapiMedia(Media);
 
   return (
@@ -35,16 +33,16 @@ const BlogPostPreviewItem: FunctionComponent<{ post: StrapiPost }> = ({ post }) 
           <Link href={`/blog/${Slug}`}>{Title}</Link>
         </h2>
         <div className="prose lg:prose-lg italic tracking-tighter text-muted-foreground">
-          {formatDate(new Date(publishedAt || updatedAt), "dd MMMM yyyy")}
+          {formatDate(new Date(publishedAt || updatedAt), "dd MMMM Kodiak")}
         </div>
         <div className="prose lg:prose-lg leading-relaxed md:text-lg line-clamp-4 text-muted-foreground">
           {Description}
         </div>
         <div className="text-sm text-muted-foreground">
-          {/* ALTERAÇÃO CRUCIAL: Acessamos as tags diretamente */}
-          {tags?.map((tag) => (
+          {/* CORREÇÃO: Acessamos os dados das tags através de 'tags.data' e 'tag.attributes' */}
+          {tags?.data.map((tag) => (
             <div key={tag.id} className="mr-2 inline-block">
-              <Link href={`/tag/${tag.Slug}`}>#{tag.Name}</Link>
+              <Link href={`/tag/${tag.attributes.Slug}`}>#{tag.attributes.Name}</Link>
             </div>
           ))}
         </div>
@@ -53,22 +51,14 @@ const BlogPostPreviewItem: FunctionComponent<{ post: StrapiPost }> = ({ post }) 
   );
 };
 
-// Este é o componente "pai" que renderiza a lista.
 export const BlogPostsPreview: FunctionComponent<{
   posts: StrapiPost[];
   className?: string;
 }> = ({ posts, className }) => {
-  if (!Array.isArray(posts)) {
-    return <p>Erro: posts não é um array.</p>;
-  }
+  if (!Array.isArray(posts)) return <p>Erro: posts não é um array.</p>;
   
   return (
-    <div
-      className={cn(
-        "grid grid-cols-1 gap-16 lg:gap-28 md:grid-cols-2 md:my-16 my-8",
-        className
-      )}
-    >
+    <div className={cn("grid grid-cols-1 gap-16 lg:gap-28 md:grid-cols-2 md:my-16 my-8", className)}>
       {posts.map((post) => (
         <BlogPostPreviewItem key={post?.id} post={post} />
       ))}
