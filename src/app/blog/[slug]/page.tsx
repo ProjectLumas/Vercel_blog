@@ -5,48 +5,46 @@ import { CommentSection } from "@/components/CommentSection";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { RelatedPosts } from "@/components/RelatedPosts";
-import { config } from "@/config";
-import { getPostBySlug, getRelatedPosts, getStrapiMedia } from "@/lib/strapi"; // Apenas funções do Strapi
+import { getPostBySlug, getRelatedPosts, getStrapiMedia } from "@/lib/strapi";
 import { notFound } from "next/navigation";
 import type { BlogPosting, WithContext } from "schema-dts";
 
-// CORREÇÃO: A função de metadados agora usa 'getPostBySlug'
-export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const post = await getPostBySlug(params.slug);
+// CORREÇÃO: Tipagem para Next.js 15, onde params é uma Promise
+interface PageProps {
+  params: Promise<{ slug: string }>;
+}
 
-  if (!post) {
-    return { title: "Post não encontrado" };
-  }
+export async function generateMetadata({ params }: PageProps) {
+  const resolvedParams = await params; // Resolve a promise
+  const post = await getPostBySlug(resolvedParams.slug);
+  if (!post) return { title: "Post não encontrado" };
 
-  const { Title, Description, Media } = post;
+  const { Title, Description, Media } = post.attributes;
   const imageUrl = getStrapiMedia(Media);
 
   return {
     title: Title,
     description: Description,
-    openGraph: {
-      title: Title,
-      description: Description || "",
-      images: imageUrl ? [imageUrl] : [],
-    },
+    openGraph: { title: Title, description: Description || "", images: imageUrl ? [imageUrl] : [] },
   };
 }
 
-const Page = async ({ params }: { params: { slug: string } }) => {
-  const { slug } = params;
+const Page = async ({ params }: PageProps) => {
+  const resolvedParams = await params; // Resolve a promise
+  const { slug } = resolvedParams;
   const post = await getPostBySlug(slug);
 
   if (!post) {
     return notFound();
   }
   
-  const { Title, publishedAt, updatedAt, Media, author, tags } = post;
+  const { Title, publishedAt, updatedAt, Media, author, tags } = post.attributes;
 
-  const firstTagSlug = tags?.[0]?.Slug;
+  const firstTagSlug = tags?.data[0]?.attributes.Slug;
   const relatedPosts = firstTagSlug ? await getRelatedPosts(post.id, firstTagSlug) : [];
 
-  const authorName = author?.Name;
-  const authorImage = getStrapiMedia(author?.picture);
+  const authorName = author?.data?.attributes.Name;
+  const authorImage = getStrapiMedia(author?.data?.attributes.picture);
   const postImage = getStrapiMedia(Media);
 
   const jsonLd: WithContext<BlogPosting> = {
@@ -61,10 +59,7 @@ const Page = async ({ params }: { params: { slug: string } }) => {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="container mx-auto px-5">
         <Header />
         <div className="max-w-prose mx-auto text-xl">

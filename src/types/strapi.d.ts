@@ -1,4 +1,4 @@
-// src/types/strapi.d.ts
+
 
 interface StrapiMediaAttributes {
   url: string;
@@ -8,7 +8,6 @@ interface StrapiMedia {
   data: { id: number; attributes: StrapiMediaAttributes } | null;
 }
 
-// CORREÇÃO: Revertendo para a estrutura com 'attributes'
 export interface StrapiTag {
   id: number;
   attributes: {
@@ -16,6 +15,7 @@ export interface StrapiTag {
     Slug: string;
   };
 }
+
 export interface StrapiAuthor {
   id: number;
   attributes: {
@@ -24,7 +24,8 @@ export interface StrapiAuthor {
   };
 }
 
-// CORREÇÃO: O post principal também é ajustado para esperar relações com 'attributes'
+// CORREÇÃO: Restauramos a camada 'attributes' para o post,
+// que é a estrutura correta retornada pela API do Strapi.
 export interface StrapiPost {
   id: number;
   attributes: {

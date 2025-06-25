@@ -1,4 +1,4 @@
-// src/components/CommentSection.tsx
+
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
@@ -25,7 +25,7 @@ export function CommentSection({ slug }: CommentSectionProps) {
     <div className="my-8">
       <h2 className="mb-8 text-2xl font-bold tracking-tight">Adicionar Comentário</h2>
       <CommentForm slug={slug} onSuccess={refetch} />
-
+      
       <h2 className="mb-8 mt-16 text-2xl font-bold tracking-tight">Comentários</h2>
       <CommentList comments={comments || []} />
     </div>
