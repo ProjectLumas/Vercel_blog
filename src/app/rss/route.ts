@@ -1,7 +1,5 @@
 // src/app/rss/route.ts
-
-export const revalidate = 3600; // 1 hora
-
+export const revalidate = 3600;
 import { NextResponse } from "next/server";
 import RSS from "rss";
 import urlJoin from "url-join";
@@ -14,17 +12,11 @@ const baseUrl = config.baseUrl;
 export async function GET() {
   const result = await getPosts({ limit: 20 });
   const posts: StrapiPost[] = result.data;
-
   const feed = new RSS({
-    title: config.blog.name,
-    description: config.blog.metadata.description,
-    site_url: baseUrl,
-    feed_url: urlJoin(baseUrl, "/rss"),
-    pubDate: new Date(),
+    title: config.blog.name, description: config.blog.metadata.description,
+    site_url: baseUrl, feed_url: urlJoin(baseUrl, "/rss"), pubDate: new Date(),
   });
-
   if (posts) {
-    // CORREÇÃO: Usando 'post.attributes' para acessar os dados
     posts.forEach((post) => {
       feed.item({
         title: post.attributes.Title,
@@ -34,13 +26,6 @@ export async function GET() {
       });
     });
   }
-
   const xml: string = feed.xml({ indent: true });
-
-  return new NextResponse(xml, {
-    headers: {
-      "Content-Type": "application/rss+xml",
-      "Access-Control-Allow-Origin": "*",
-    },
-  });
+  return new NextResponse(xml, { headers: { "Content-Type": "application/rss+xml" } });
 }

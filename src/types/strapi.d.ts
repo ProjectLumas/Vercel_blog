@@ -1,5 +1,4 @@
 // src/types/strapi.d.ts
-
 interface StrapiMediaAttributes {
   url: string;
   alternativeText?: string;
@@ -7,23 +6,14 @@ interface StrapiMediaAttributes {
 interface StrapiMedia {
   data: { id: number; attributes: StrapiMediaAttributes } | null;
 }
-
 export interface StrapiTag {
   id: number;
-  attributes: {
-    Name: string;
-    Slug: string;
-  };
+  attributes: { Name: string; Slug: string; };
 }
-
 export interface StrapiAuthor {
   id: number;
-  attributes: {
-    Name: string;
-    picture: StrapiMedia;
-  };
+  attributes: { Name: string; picture: StrapiMedia; };
 }
-
 export interface StrapiPost {
   id: number;
   attributes: {
@@ -39,12 +29,7 @@ export interface StrapiPost {
     tags: { data: StrapiTag[] };
   };
 }
-
 export interface StrapiComment {
   id: number;
-  attributes: {
-    author: string;
-    content: string;
-    createdAt: string;
-  };
+  attributes: { author: string; content: string; createdAt: string; };
 }
