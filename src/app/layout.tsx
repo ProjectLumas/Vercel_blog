@@ -1,12 +1,20 @@
+// src/app/layout.tsx
+
 import { config } from "@/config";
-import { signOgImageUrl } from "@/lib/og-image";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+// ALTERAÇÃO: Importamos a fonte 'Quicksand' em vez de 'Inter'
+import { Quicksand } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import { Toaster } from "@/components/ui/toaster"; // Adicionando o Toaster aqui
 
-const fontSans = Inter({ subsets: ["latin"], variable: "--font-sans" });
+// ALTERAÇÃO: Configurando a Quicksand com os pesos que você precisa
+const fontQuicksand = Quicksand({
+  subsets: ["latin"],
+  variable: "--font-sans", // Continuamos usando a variável --font-sans para facilitar a integração com o Tailwind
+  weight: ["400", "500", "700"], // Carregando os pesos Regular (400), Medium (500) e Bold (700)
+});
 
 export const metadata: Metadata = {
   title: {
@@ -15,15 +23,6 @@ export const metadata: Metadata = {
     template: config.blog.metadata.title.template,
   },
   description: config.blog.metadata.description,
-  openGraph: {
-    title: config.blog.metadata.title.default,
-    description: config.blog.metadata.description,
-    images: [
-      signOgImageUrl({
-        title: config.blog.name,
-      }),
-    ],
-  },
 };
 
 export default function RootLayout({
@@ -32,15 +31,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      {/* ALTERAÇÃO: Aplicamos a variável da fonte Quicksand ao corpo da página.
+        A classe 'font-sans' do Tailwind agora usará a Quicksand como padrão.
+      */}
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased max-w-6xl m-auto",
-          fontSans.variable
+          fontQuicksand.variable
         )}
       >
         <Providers>
           <main>{children}</main>
+          <Toaster />
         </Providers>
       </body>
     </html>

@@ -1,4 +1,5 @@
 // src/components/CommentForm.tsx
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { createComment } from "@/lib/strapi";
+import { createComment } from "@/lib/strapi"; // Apenas import do Strapi
 
 const formSchema = z.object({
   author: z.string().min(1, "O nome é obrigatório"),
@@ -35,7 +36,7 @@ export function CommentForm({ slug, onSuccess }: CommentFormProps) {
       }
     },
     onError: (e) => {
-      toast({ title: "Erro", description: e.message, variant: "destructive" });
+      toast({ title: "Erro", description: (e as Error).message, variant: "destructive" });
     },
   });
 
@@ -67,7 +68,6 @@ export function CommentForm({ slug, onSuccess }: CommentFormProps) {
             </FormItem>
           )} />
         </div>
-
         <FormField control={form.control} name="content" render={({ field }) => (
           <FormItem>
             <FormLabel>Comentário</FormLabel>
@@ -75,7 +75,6 @@ export function CommentForm({ slug, onSuccess }: CommentFormProps) {
             <FormMessage />
           </FormItem>
         )} />
-
         <Button type="submit" disabled={isPending}>
           {isPending ? "Enviando..." : "Enviar Comentário"}
         </Button>

@@ -6,58 +6,53 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { RelatedPosts } from "@/components/RelatedPosts";
 import { config } from "@/config";
-import { getPostBySlug, getRelatedPosts, getStrapiMedia } from "@/lib/strapi";
+import { getPostBySlug, getRelatedPosts, getStrapiMedia } from "@/lib/strapi"; // Apenas funções do Strapi
 import { notFound } from "next/navigation";
 import type { BlogPosting, WithContext } from "schema-dts";
 
-export async function generateMetadata(props: { params: { slug: string } }) {
-  const { slug } = props.params;
-  const post = await getPostBySlug(slug);
+// CORREÇÃO: A função de metadados agora usa 'getPostBySlug'
+export async function generateMetadata({ params }: { params: { slug: string } }) {
+  const post = await getPostBySlug(params.slug);
 
   if (!post) {
     return { title: "Post não encontrado" };
   }
 
-  const { title, description } = post.attributes;
-  const postImage = getStrapiMedia(post.attributes.image);
+  const { Title, Description, Media } = post;
+  const imageUrl = getStrapiMedia(Media);
 
   return {
-    title,
-    description,
+    title: Title,
+    description: Description,
     openGraph: {
-      title,
-      description,
-      images: postImage ? [postImage] : [],
+      title: Title,
+      description: Description || "",
+      images: imageUrl ? [imageUrl] : [],
     },
   };
 }
 
-interface Params {
-  slug: string;
-}
-
-const Page = async (props: { params: Params }) => {
-  const { slug } = props.params;
+const Page = async ({ params }: { params: { slug: string } }) => {
+  const { slug } = params;
   const post = await getPostBySlug(slug);
 
   if (!post) {
     return notFound();
   }
-
-  const { title, publishedAt, updatedAt, image, author } = post.attributes;
-
-  // Lógica para buscar posts relacionados: Pega a primeira tag do post e busca outros com a mesma tag.
-  const firstTagSlug = post.attributes.tags?.data[0]?.attributes.slug;
-  const relatedPosts = firstTagSlug ? await getRelatedPosts(post.id, firstTagSlug) : [];
   
-  const authorName = author?.data?.attributes?.name;
-  const authorImage = getStrapiMedia(author?.data?.attributes?.picture);
-  const postImage = getStrapiMedia(image);
+  const { Title, publishedAt, updatedAt, Media, author, tags } = post;
+
+  const firstTagSlug = tags?.[0]?.Slug;
+  const relatedPosts = firstTagSlug ? await getRelatedPosts(post.id, firstTagSlug) : [];
+
+  const authorName = author?.Name;
+  const authorImage = getStrapiMedia(author?.picture);
+  const postImage = getStrapiMedia(Media);
 
   const jsonLd: WithContext<BlogPosting> = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
-    headline: title,
+    headline: Title,
     image: postImage || undefined,
     datePublished: publishedAt,
     dateModified: updatedAt,

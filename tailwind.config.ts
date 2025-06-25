@@ -1,3 +1,5 @@
+// tailwind.config.ts
+
 import type { Config } from "tailwindcss";
 import { fontFamily } from "tailwindcss/defaultTheme";
 
@@ -73,6 +75,8 @@ const config = {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
+      // ALTERAÇÃO: Explicitamente definimos que a fonte 'sans-serif' padrão
+      // usará a variável CSS '--font-sans' que configuramos no layout.
       fontFamily: {
         sans: ["var(--font-sans)", ...fontFamily.sans],
       },
