@@ -5,14 +5,13 @@ export const revalidate = 3600; // 1 hora
 import { NextResponse } from "next/server";
 import RSS from "rss";
 import urlJoin from "url-join";
-import { getPosts } from "@/lib/strapi"; // 1. Importa a função do Strapi
-import { StrapiPost } from "@/types/strapi"; // 2. Importa o tipo do Strapi
+import { getPosts } from "@/lib/strapi";
+import { StrapiPost } from "@/types/strapi";
 import { config } from "@/config";
 
 const baseUrl = config.baseUrl;
 
 export async function GET() {
-  // 3. Busca os 20 posts mais recentes do Strapi
   const result = await getPosts({ limit: 20 });
   const posts: StrapiPost[] = result.data;
 
@@ -24,15 +23,17 @@ export async function GET() {
     pubDate: new Date(),
   });
 
-  // 4. Itera sobre os posts e ajusta o acesso aos dados para usar 'attributes'
-  posts.forEach((post) => {
-    feed.item({
-      title: post.attributes.title,
-      description: post.attributes.description || "",
-      url: urlJoin(baseUrl, `/blog/${post.attributes.slug}`),
-      date: post.attributes.publishedAt || post.attributes.createdAt,
+  if (posts) {
+    // CORREÇÃO: Usando 'post.attributes' para acessar os dados
+    posts.forEach((post) => {
+      feed.item({
+        title: post.attributes.Title,
+        description: post.attributes.Description || "",
+        url: urlJoin(baseUrl, `/blog/${post.attributes.Slug}`),
+        date: new Date(post.attributes.publishedAt || post.attributes.createdAt),
+      });
     });
-  });
+  }
 
   const xml: string = feed.xml({ indent: true });
 
@@ -40,8 +41,6 @@ export async function GET() {
     headers: {
       "Content-Type": "application/rss+xml",
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Access-Control-Allow-Methods": "GET",
     },
   });
 }
