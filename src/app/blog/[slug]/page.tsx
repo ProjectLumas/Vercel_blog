@@ -9,7 +9,7 @@ import { getPostBySlug, getRelatedPosts, getStrapiMedia } from "@/lib/strapi";
 import { notFound } from "next/navigation";
 import type { BlogPosting, WithContext } from "schema-dts";
 
-// CORREÇÃO: Tipagem para Next.js 15, onde params é uma Promise
+// CORREÇÃO: Tipagem correta para Next.js 15, onde params é uma Promise
 interface PageProps {
   params: Promise<{ slug: string }>;
 }

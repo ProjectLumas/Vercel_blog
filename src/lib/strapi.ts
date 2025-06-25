@@ -11,7 +11,6 @@ function getStrapiURL(path = "") {
 async function fetchApi(path: string, options = {}) {
   const defaultOptions = { 
     headers: { 'Content-Type': 'application/json' },
-    // Para Vercel, é melhor definir a política de cache aqui
     cache: 'no-store' as RequestCache 
   };
   const mergedOptions = { ...defaultOptions, ...options };
@@ -50,12 +49,12 @@ export async function getTagBySlug(slug: string) {
   return res.data?.[0] ?? null;
 }
 
-// --- INÍCIO DAS FUNÇÕES QUE ESTAVAM FALTANDO ---
+// --- FUNÇÕES ADICIONADAS ---
 export async function getComments(slug: string): Promise<StrapiComment[]> {
     const query = new URLSearchParams({ 
         "filters[post][Slug][$eq]": slug,
         "sort[0]": "createdAt:asc",
-        "populate": "*", // Adicionado populate para garantir que os dados venham
+        "populate": "*",
     });
     const res = await fetchApi(`/api/comments?${query.toString()}`);
     return res.data;
@@ -71,7 +70,7 @@ export async function getRelatedPosts(postId: number, tagSlug: string): Promise<
     const res = await fetchApi(`/api/lumas-blogs?${query.toString()}`);
     return res.data;
 }
-// --- FIM DAS FUNÇÕES FALTANTES ---
+// --- FIM DAS FUNÇÕES ADICIONADAS ---
 
 export async function createComment(data: { author: string; email: string; content: string; postSlug: string; }) {
   const post = await getPostBySlug(data.postSlug);
