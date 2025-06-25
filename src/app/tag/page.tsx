@@ -2,11 +2,10 @@
 
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
-import { getTags } from "@/lib/strapi"; // Usando a nova função
-import { StrapiTag } from "@/types/strapi"; // Usando nosso tipo
+import { getTags } from "@/lib/strapi";
+import { StrapiTag } from "@/types/strapi";
 import Link from "next/link";
 
-// A função generateMetadata pode ser ajustada depois, se necessário
 export async function generateMetadata() {
   return {
     title: "Tags",
@@ -15,7 +14,6 @@ export async function generateMetadata() {
 }
 
 export default async function Page() {
-  // Buscando as tags do Strapi
   const tags: StrapiTag[] = await getTags();
 
   if (!tags) {
@@ -33,11 +31,10 @@ export default async function Page() {
         {tags.map((tag) => (
           <Link
             key={tag.id}
-            // Usando os dados da estrutura do Strapi
-            href={`/tag/${tag.attributes.slug}`}
+            href={`/tag/${tag.attributes.Slug}`}
             className="text-primary mr-2 inline-block"
           >
-            #{tag.attributes.name}
+            #{tag.attributes.Name}
           </Link>
         ))}
       </div>

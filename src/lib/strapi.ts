@@ -1,7 +1,7 @@
 // src/lib/strapi.ts
 
 import { config } from "@/config";
-import { StrapiComment, StrapiPost } from "@/types/strapi";
+import { StrapiComment, StrapiPost, StrapiTag } from "@/types/strapi";
 
 function getStrapiURL(path = "") {
   if (path.startsWith('/')) path = path.slice(1);
@@ -43,13 +43,18 @@ export async function getPostBySlug(slug: string): Promise<StrapiPost | null> {
   return res.data?.[0] ?? null;
 }
 
-export async function getTagBySlug(slug: string) {
+// --- FUNÇÃO FALTANTE ADICIONADA ---
+export async function getTags(): Promise<StrapiTag[]> {
+  const res = await fetchApi(`/api/tags`);
+  return res.data;
+}
+
+export async function getTagBySlug(slug: string): Promise<StrapiTag | null> {
   const query = new URLSearchParams({ "filters[Slug][$eq]": slug });
   const res = await fetchApi(`/api/tags?${query.toString()}`);
   return res.data?.[0] ?? null;
 }
 
-// --- FUNÇÕES ADICIONADAS ---
 export async function getComments(slug: string): Promise<StrapiComment[]> {
     const query = new URLSearchParams({ 
         "filters[post][Slug][$eq]": slug,
@@ -70,7 +75,6 @@ export async function getRelatedPosts(postId: number, tagSlug: string): Promise<
     const res = await fetchApi(`/api/lumas-blogs?${query.toString()}`);
     return res.data;
 }
-// --- FIM DAS FUNÇÕES ADICIONADAS ---
 
 export async function createComment(data: { author: string; email: string; content: string; postSlug: string; }) {
   const post = await getPostBySlug(data.postSlug);
