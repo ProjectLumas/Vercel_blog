@@ -20,7 +20,7 @@ interface PageProps {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;
   const tag = await getTagBySlug(resolvedParams.slug);
-  const tagName = tag?.attributes.Name || resolvedParams.slug;
+  const tagName = tag?.Name || resolvedParams.slug;
   return { title: `#${tagName}`, description: `Posts com a tag #${tagName}` };
 }
 
@@ -44,7 +44,7 @@ const Page = async ({ params, searchParams }: PageProps) => {
       <Link href="/tag">
         <Badge className="px-2 py-1">
           <CircleX className="inline-block w-4 h-4 mr-2" />
-          Posts com a tag <strong className="mx-2">#{tag.attributes.Name}</strong>
+          Posts com a tag <strong className="mx-2">#{tag.Name}</strong>
         </Badge>
       </Link>
       <BlogPostsPreview posts={posts} />

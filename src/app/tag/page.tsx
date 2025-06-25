@@ -1,25 +1,13 @@
 // src/app/tag/page.tsx
-
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { getTags } from "@/lib/strapi";
 import { StrapiTag } from "@/types/strapi";
 import Link from "next/link";
 
-export async function generateMetadata() {
-  return {
-    title: "Tags",
-    description: "Categorias e tópicos do blog.",
-  };
-}
-
 export default async function Page() {
   const tags: StrapiTag[] = await getTags();
-
-  if (!tags) {
-    return <div>Nenhuma tag encontrada.</div>;
-  }
-
+  if (!tags) return <div>Nenhuma tag encontrada.</div>;
   return (
     <div className="container mx-auto px-5">
       <Header />
@@ -29,11 +17,7 @@ export default async function Page() {
       </div>
       <div className="my-10 max-w-6xl text-balance text-center text-xl mb-48">
         {tags.map((tag) => (
-          <Link
-            key={tag.id}
-            href={`/tag/${tag.attributes.Slug}`}
-            className="text-primary mr-2 inline-block"
-          >
+          <Link key={tag.id} href={`/tag/${tag.attributes.Slug}`} className="text-primary mr-2 inline-block">
             #{tag.attributes.Name}
           </Link>
         ))}

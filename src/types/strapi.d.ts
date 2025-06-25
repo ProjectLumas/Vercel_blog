@@ -1,5 +1,6 @@
+// src/types/strapi.d.ts
 
-
+// Tipos para Relações (que mantêm a estrutura 'attributes')
 interface StrapiMediaAttributes {
   url: string;
   alternativeText?: string;
@@ -7,39 +8,28 @@ interface StrapiMediaAttributes {
 interface StrapiMedia {
   data: { id: number; attributes: StrapiMediaAttributes } | null;
 }
-
 export interface StrapiTag {
   id: number;
-  attributes: {
-    Name: string;
-    Slug: string;
-  };
+  attributes: { Name: string; Slug: string; };
 }
-
 export interface StrapiAuthor {
   id: number;
-  attributes: {
-    Name: string;
-    picture: StrapiMedia;
-  };
+  attributes: { Name: string; picture: StrapiMedia; };
 }
 
-// CORREÇÃO: Restauramos a camada 'attributes' para o post,
-// que é a estrutura correta retornada pela API do Strapi.
+// O tipo do Post em si é "plano", mas suas relações não são.
 export interface StrapiPost {
   id: number;
-  attributes: {
-    Title: string;
-    Description: string | null;
-    Content: any;
-    Slug: string;
-    createdAt: string;
-    updatedAt: string;
-    publishedAt: string;
-    Media: StrapiMedia | null;
-    author: { data: StrapiAuthor | null };
-    tags: { data: StrapiTag[] };
-  };
+  Title: string;
+  Description: string | null;
+  Content: any;
+  Slug: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  Media: StrapiMedia | null;
+  author: { data: StrapiAuthor | null };
+  tags: { data: StrapiTag[] };
 }
 
 export interface StrapiComment {

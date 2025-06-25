@@ -1,5 +1,4 @@
 // src/app/tag/[slug]/page.tsx
-
 import { BlogPostsPreview } from "@/components/BlogPostPreview";
 import { BlogPostsPagination } from "@/components/BlogPostsPagination";
 import { Footer } from "@/components/Footer";
@@ -12,34 +11,26 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 interface PageProps {
-  params: { slug: string };
-  searchParams: { [key: string]: string | string[] | undefined };
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const tag = await getTagBySlug(params.slug);
-
-  if (!tag) {
-    return { title: "Tag não encontrada" };
-  }
-  
-  // AGORA FUNCIONA: O 'tag' tem 'attributes'
-  const tagName = tag.attributes.Name;
-  return {
-    title: `#${tagName}`,
-    description: `Posts com a tag #${tagName}`,
-  };
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const resolvedParams = await params;
+  const tag = await getTagBySlug(resolvedParams.slug);
+  const tagName = tag?.attributes.Name || resolvedParams.slug;
+  return { title: `#${tagName}`, description: `Posts com a tag #${tagName}` };
 }
 
 const Page = async ({ params, searchParams }: PageProps) => {
-  const { slug } = params;
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
+  
+  const { slug } = resolvedParams;
   const tag = await getTagBySlug(slug);
+  if (!tag) return notFound();
 
-  if (!tag) {
-    return notFound();
-  }
-
-  const page = searchParams.page ? parseInt(searchParams.page as string) : 1;
+  const page = resolvedSearchParams.page ? parseInt(resolvedSearchParams.page as string, 10) : 1;
   const result = await getPosts({ limit: 6, tags: [slug], page });
   
   const posts: StrapiPost[] = result.data;
@@ -55,11 +46,7 @@ const Page = async ({ params, searchParams }: PageProps) => {
         </Badge>
       </Link>
       <BlogPostsPreview posts={posts} />
-      <BlogPostsPagination
-        pagination={pagination}
-        basePath={`/tag/${slug}/?page=`}
-      />
-      <Footer />
+      <BlogPostsPagination pagination={pagination} basePath={`/tag/${slug}/?page=`} />
     </div>
   );
 };

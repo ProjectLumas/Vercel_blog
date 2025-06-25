@@ -23,6 +23,13 @@ async function fetchApi(path: string, options = {}) {
   return response.json();
 }
 
+// CORREÇÃO: A API do Strapi v4/v5 geralmente retorna os dados dentro de um objeto 'data' com 'attributes'.
+// Esta função normaliza a resposta para a estrutura "plana" que decidimos usar.
+function normalizePost(post: any): StrapiPost {
+    const { id, attributes } = post;
+    return { id, ...attributes };
+}
+
 export async function getPosts(params: { page?: number; limit?: number; tags?: string[] } = {}) {
   const { page = 1, limit = 6, tags = [] } = params;
   const query = new URLSearchParams({
@@ -34,16 +41,20 @@ export async function getPosts(params: { page?: number; limit?: number; tags?: s
   if (tags.length > 0) {
     tags.forEach((tag, i) => query.append(`filters[tags][Slug][$in][${i}]`, tag));
   }
-  return fetchApi(`/api/lumas-blogs?${query.toString()}`);
+  const res = await fetchApi(`/api/lumas-blogs?${query.toString()}`);
+  return {
+    data: res.data.map(normalizePost),
+    meta: res.meta,
+  };
 }
 
 export async function getPostBySlug(slug: string): Promise<StrapiPost | null> {
   const query = new URLSearchParams({ "filters[Slug][$eq]": slug, "populate": "*" });
   const res = await fetchApi(`/api/lumas-blogs?${query.toString()}`);
-  return res.data?.[0] ?? null;
+  if (!res.data || res.data.length === 0) return null;
+  return normalizePost(res.data[0]);
 }
 
-// --- FUNÇÃO FALTANTE ADICIONADA ---
 export async function getTags(): Promise<StrapiTag[]> {
   const res = await fetchApi(`/api/tags`);
   return res.data;
@@ -73,11 +84,12 @@ export async function getRelatedPosts(postId: number, tagSlug: string): Promise<
         "populate": "*",
     });
     const res = await fetchApi(`/api/lumas-blogs?${query.toString()}`);
-    return res.data;
+    return res.data.map(normalizePost);
 }
 
 export async function createComment(data: { author: string; email: string; content: string; postSlug: string; }) {
-  const post = await getPostBySlug(data.postSlug);
+  const postRes = await fetchApi(`/api/lumas-blogs?filters[Slug][$eq]=${data.postSlug}`);
+  const post = postRes.data?.[0];
   if (!post) throw new Error("Post não encontrado");
   return fetchApi('/api/comments', {
     method: 'POST',
