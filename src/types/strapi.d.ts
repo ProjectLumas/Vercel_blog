@@ -1,6 +1,5 @@
+// src/types/strapi.d.ts
 
-
-// Tipos para Relações, que mantêm a estrutura aninhada padrão do Strapi
 interface StrapiMediaAttributes {
   url: string;
   alternativeText?: string;
@@ -25,7 +24,6 @@ export interface StrapiAuthor {
   };
 }
 
-// O tipo do Post, que contém a camada 'attributes'
 export interface StrapiPost {
   id: number;
   attributes: {
@@ -50,4 +48,3 @@ export interface StrapiComment {
     createdAt: string;
   };
 }
-// --- Fim do Código Final ---

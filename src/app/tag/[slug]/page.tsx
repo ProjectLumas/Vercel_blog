@@ -1,5 +1,4 @@
 // src/app/tag/[slug]/page.tsx
-
 import { BlogPostsPreview } from "@/components/BlogPostPreview";
 import { BlogPostsPagination } from "@/components/BlogPostsPagination";
 import { Footer } from "@/components/Footer";
@@ -51,5 +50,4 @@ const Page = async ({ params, searchParams }: PageProps) => {
     </div>
   );
 };
-
 export default Page;
