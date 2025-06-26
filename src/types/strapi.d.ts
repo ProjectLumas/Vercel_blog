@@ -1,33 +1,33 @@
 // src/types/strapi.d.ts
-interface StrapiMediaAttributes {
+interface CleanMedia {
+  id: number;
   url: string;
-  alternativeText?: string;
+  alternativeText?: string | null;
+  name: string;
 }
-interface StrapiMedia {
-  data: { id: number; attributes: StrapiMediaAttributes } | null;
-}
-export interface StrapiTag {
+export interface CleanTag {
   id: number;
-  attributes: { Name: string; Slug: string; };
+  Name: string;
+  Slug: string;
 }
-export interface StrapiAuthor {
+export interface CleanAuthor {
   id: number;
-  attributes: { Name: string; picture: StrapiMedia; };
+  Name: string;
+  // A API não está retornando a 'picture' para o autor no momento.
+  // picture: CleanMedia | null; 
 }
-export interface StrapiPost {
+export interface CleanPost {
   id: number;
-  attributes: {
-    Title: string;
-    Description: string | null;
-    Content: any;
-    Slug: string;
-    createdAt: string;
-    updatedAt: string;
-    publishedAt: string;
-    Media: StrapiMedia | null;
-    author: { data: StrapiAuthor | null };
-    tags: { data: StrapiTag[] };
-  };
+  Title: string;
+  Description: string | null;
+  Content: any;
+  Slug: string | null;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  Media: CleanMedia[] | null;
+  author: CleanAuthor | null;
+  tags: CleanTag[];
 }
 export interface StrapiComment {
   id: number;

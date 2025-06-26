@@ -5,7 +5,7 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { Badge } from "@/components/ui/badge";
 import { getPosts, getTagBySlug } from "@/lib/strapi";
-import { StrapiPost, StrapiTag } from "@/types/strapi";
+import { CleanPost, CleanTag } from "@/types/strapi";
 import { CircleX } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -17,8 +17,8 @@ interface PageProps {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;
-  const tag: StrapiTag | null = await getTagBySlug(resolvedParams.slug);
-  const tagName = tag?.attributes.Name || resolvedParams.slug;
+  const tag: CleanTag | null = await getTagBySlug(resolvedParams.slug);
+  const tagName = tag?.Name || resolvedParams.slug;
   return { title: `#${tagName}`, description: `Posts com a tag #${tagName}` };
 }
 
@@ -33,18 +33,13 @@ const Page = async ({ params, searchParams }: PageProps) => {
   const page = resolvedSearchParams.page ? parseInt(resolvedSearchParams.page as string, 10) : 1;
   const result = await getPosts({ limit: 6, tags: [slug], page });
   
-  const posts: StrapiPost[] = result.data;
+  const posts: CleanPost[] = result.data;
   const pagination = result.meta.pagination;
 
   return (
     <div className="container mx-auto px-5 mb-10">
       <Header />
-      <Link href="/tag">
-        <Badge className="px-2 py-1">
-          <CircleX className="inline-block w-4 h-4 mr-2" />
-          Posts com a tag <strong className="mx-2">#{tag.attributes.Name}</strong>
-        </Badge>
-      </Link>
+      <Link href="/tag"><Badge className="px-2 py-1"><CircleX className="inline-block w-4 h-4 mr-2" />Posts com a tag <strong className="mx-2">#{tag.Name}</strong></Badge></Link>
       <BlogPostsPreview posts={posts} />
       <BlogPostsPagination pagination={pagination} basePath={`/tag/${slug}/?page=`} />
     </div>
