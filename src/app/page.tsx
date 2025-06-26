@@ -1,25 +1,23 @@
-// src/app/page.tsx - MODO DE DEPURAÇÃO DE DADOS EM PRODUÇÃO
+// src/app/page.tsx - MODO DE DEPURAÇÃO COM LINTING CORRIGIDO
 
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { getPosts } from "@/lib/strapi"; // Importamos nossa função de API
+import { getPosts } from "@/lib/strapi"; 
 
-// Esta diretiva é importante para garantir que a página seja renderizada dinamicamente
 export const dynamic = 'force-dynamic';
 
 const Page = async () => {
   try {
-    // Tentamos buscar os posts da página 1
     const result = await getPosts({ page: 1 });
 
-    // Se não houver dados ou a estrutura estiver incorreta, mostramos um erro claro
     if (!result || !result.data) {
       return (
         <div className="container mx-auto px-5">
           <Header />
           <div className="my-16 text-center">
             <h1 className="text-2xl font-bold mb-4">Erro na Resposta da API</h1>
-            <p>A API foi chamada, mas não retornou a estrutura de dados esperada (sem a chave 'data').</p>
+            {/* CORREÇÃO: Usando &apos; para o apóstrofo */}
+            <p>A API foi chamada, mas não retornou a estrutura de dados esperada (sem a chave &apos;data&apos;).</p>
             <pre style={{ border: '1px solid black', padding: '10px', textAlign: 'left', marginTop: '20px' }}>
               {JSON.stringify(result, null, 2)}
             </pre>
@@ -29,7 +27,6 @@ const Page = async () => {
       );
     }
 
-    // Se chegou aqui, a busca de dados funcionou! Exibimos os dados brutos.
     return (
       <div className="container mx-auto px-5">
         <Header />
@@ -44,7 +41,6 @@ const Page = async () => {
     );
 
   } catch (error: any) {
-    // Se a função 'getPosts' falhar, exibimos o erro
     return (
       <div className="container mx-auto px-5">
         <Header />
