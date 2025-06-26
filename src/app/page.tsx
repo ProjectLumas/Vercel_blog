@@ -1,27 +1,31 @@
-// src/app/page.tsx
+// src/app/page.tsx - MODO DE DEPURAÇÃO DE VARIÁVEL DE AMBIENTE
 
-export const dynamic = 'force-dynamic';
-
-import { Suspense } from "react";
-import { Footer } from "@/components/Footer";
+// Importante: Não faremos busca de dados, apenas renderização simples.
 import { Header } from "@/components/Header";
-import { PostsList } from "@/components/PostsList";
+import { Footer } from "@/components/Footer";
 
-interface PageProps {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}
-
-const Page = async ({ searchParams }: PageProps) => {
-  // CORREÇÃO: Usando 'await' para resolver a promise antes de usá-la
-  const resolvedSearchParams = await searchParams;
-  const currentPage = typeof resolvedSearchParams?.page === 'string' ? parseInt(resolvedSearchParams.page, 10) : 1;
+const Page = () => {
+  // Tentamos ler a variável de ambiente diretamente do processo do servidor.
+  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
   return (
-    <div className="container mx-auto px-5 mb-10">
+    <div className="container mx-auto px-5">
       <Header />
-      <Suspense fallback={<div className="text-center my-16">Carregando posts...</div>}>
-        <PostsList currentPage={currentPage} />
-      </Suspense>
+      <div className="my-16 text-center">
+        <h1 className="text-2xl font-bold mb-4">Teste de Variável de Ambiente</h1>
+        <p className="mb-2">O valor de NEXT_PUBLIC_STRAPI_API_URL que a Vercel está lendo é:</p>
+        <pre 
+          style={{ 
+            color: strapiUrl ? 'green' : 'red', 
+            border: '2px solid black', 
+            padding: '20px', 
+            fontSize: '1.2rem',
+            wordWrap: 'break-word'
+          }}
+        >
+          {strapiUrl || "ERRO: A VARIÁVEL NÃO FOI ENCONTRADA!"}
+        </pre>
+      </div>
       <Footer />
     </div>
   );
