@@ -1,4 +1,5 @@
 // src/lib/strapi.ts
+
 import { config } from "@/config";
 import { StrapiComment, CleanPost, CleanTag, CleanAuthor } from "@/types/strapi";
 
@@ -28,7 +29,6 @@ function normalizePost(postData: any): CleanPost {
   const authorData = attributes.author?.data?.attributes;
   const authorId = attributes.author?.data?.id;
   const tagsData = attributes.tags?.data;
-
   return {
     id, Title: attributes.Title, Description: attributes.Description,
     Content: attributes.Content, Slug: attributes.Slug, createdAt: attributes.createdAt,
@@ -43,7 +43,8 @@ export async function getPosts(params: { page?: number; limit?: number; tags?: s
   const { page = 1, limit = 6, tags = [] } = params;
   const query = new URLSearchParams({
     "sort[0]": "publishedAt:desc", "pagination[page]": page.toString(),
-    "pagination[pageSize]": limit.toString(), "populate": "deep",
+    "pagination[pageSize]": limit.toString(), 
+    "populate": "*", // CORREÇÃO: Usando o wildcard '*' em vez de 'deep'
   });
   if (tags.length > 0) tags.forEach((tag) => query.append(`filters[tags][Slug][$in]`, tag));
   const res = await fetchApi(`/api/lumas-blogs?${query.toString()}`);
@@ -51,14 +52,14 @@ export async function getPosts(params: { page?: number; limit?: number; tags?: s
 }
 
 export async function getPostBySlug(slug: string): Promise<CleanPost | null> {
-  const query = new URLSearchParams({ "filters[Slug][$eq]": slug, "populate": "deep" });
+  const query = new URLSearchParams({ "filters[Slug][$eq]": slug, "populate": "*" }); // CORREÇÃO
   const res = await fetchApi(`/api/lumas-blogs?${query.toString()}`);
   if (!res.data || res.data.length === 0) return null;
   return normalizePost(res.data[0]);
 }
 
 export async function getTags(): Promise<CleanTag[]> {
-  const res = await fetchApi(`/api/tags`);
+  const res = await fetchApi(`/api/tags?populate=*`);
   return res.data.map((tag: any) => ({ id: tag.id, ...tag.attributes }));
 }
 
@@ -73,18 +74,18 @@ export async function getTagBySlug(slug: string): Promise<CleanTag | null> {
 export async function getRelatedPosts(postId: number, tagSlug: string): Promise<CleanPost[]> {
   const query = new URLSearchParams({
     "filters[tags][Slug][$eq]": tagSlug, "filters[id][$ne]": postId.toString(),
-    "pagination[limit]": "3", "populate": "deep",
+    "pagination[limit]": "3", "populate": "*", // CORREÇÃO
   });
   const res = await fetchApi(`/api/lumas-blogs?${query.toString()}`);
   return res.data.map(normalizePost);
 }
 
-// Funções de comentário não precisam de normalização complexa
 export async function getComments(slug: string): Promise<StrapiComment[]> {
-  const query = new URLSearchParams({ "filters[post][Slug][$eq]": slug, "sort[0]": "createdAt:asc" });
-  const res = await fetchApi(`/api/comments?${query.toString()}`);
-  return res.data;
+    const query = new URLSearchParams({ "filters[post][Slug][$eq]": slug, "sort[0]": "createdAt:asc" });
+    const res = await fetchApi(`/api/comments?${query.toString()}`);
+    return res.data;
 }
+
 export async function createComment(data: { author: string; email: string; content: string; postSlug: string; }) {
   const postRes = await fetchApi(`/api/lumas-blogs?filters[Slug][$eq]=${data.postSlug}&fields[0]=id`);
   const post = postRes.data?.[0];
