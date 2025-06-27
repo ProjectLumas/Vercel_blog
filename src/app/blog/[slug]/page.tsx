@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: PageProps) {
   const post = await getPostBySlug(resolvedParams.slug);
   if (!post) return { title: "Post não encontrado" };
   const { Title, Description, Media } = post;
-  const imageUrl = Media?.url;
+  const imageUrl = Media?.[0]?.url;
   return { title: Title, description: Description || undefined, openGraph: { title: Title, description: Description || "", images: imageUrl ? [imageUrl] : [], }, };
 }
 
@@ -29,13 +29,12 @@ const Page = async ({ params }: PageProps) => {
   const firstTagSlug = tags?.[0]?.Slug;
   const relatedPosts = firstTagSlug ? await getRelatedPosts(post.id, firstTagSlug) : [];
   const authorName = author?.Name;
-  const authorImage = author?.picture?.url;
-  const postImage = Media?.url;
+  const postImage = Media?.[0]?.url;
 
   const jsonLd: WithContext<BlogPosting> = {
     "@context": "https://schema.org", "@type": "BlogPosting", headline: Title,
     image: postImage || undefined, datePublished: publishedAt, dateModified: updatedAt,
-    author: authorName ? { "@type": "Person", name: authorName, image: authorImage || undefined } : undefined,
+    author: authorName ? { "@type": "Person", name: authorName } : undefined,
   };
 
   return (

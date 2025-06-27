@@ -10,7 +10,7 @@ import { FunctionComponent } from "react";
 const BlogPostPreviewItem: FunctionComponent<{ post: CleanPost }> = ({ post }) => {
   if (!post) return null;
   const { Title, Slug, Description, publishedAt, updatedAt, Media, tags } = post;
-  const imageUrl = Media?.url;
+  const imageUrl = Media?.[0]?.url;
   return (
     <div className="break-words">
       <Link href={`/blog/${Slug}`}><div className="aspect-[16/9] relative"><Image alt={Title || 'Imagem do post'} className="object-cover" src={imageUrl || "/images/placeholder.webp"} fill /></div></Link>

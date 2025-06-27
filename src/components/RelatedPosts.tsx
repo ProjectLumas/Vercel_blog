@@ -13,7 +13,7 @@ export const RelatedPosts: FunctionComponent<{ posts: CleanPost[] }> = ({ posts 
       <div className="mb-6 text-lg font-semibold tracking-tight">Posts Relacionados</div>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {posts.slice(0, 3).map((post) => {
-          const imageUrl = post.Media?.url;
+          const imageUrl = post.Media?.[0]?.url;
           return (
             <div className=" bg-muted overflow-hidden rounded-lg" key={post.id}>
               <Link href={`/blog/${post.Slug}`}><AspectRatio ratio={16 / 9} className="w-full"><Image src={imageUrl || "/images/placeholder.png"} alt={post.Title} fill className="h-full min-h-full min-w-full object-cover object-center" /></AspectRatio></Link>
