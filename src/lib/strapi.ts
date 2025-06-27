@@ -45,9 +45,15 @@ export async function getTagBySlug(slug: string): Promise<CleanTag | null> {
 }
 
 export async function getComments(slug: string): Promise<CleanComment[]> {
-    const query = new URLSearchParams({ "filters[post][Slug][$eq]": slug, "sort[0]": "createdAt:asc" });
+    const query = new URLSearchParams({ 
+        "filters[post][Slug][$eq]": slug, 
+        "sort[0]": "createdAt:asc",
+        "populate": "*" 
+    });
     const res = await fetchApi(`/api/comments?${query.toString()}`);
-    return res.data;
+    // A API de comentários retorna com 'attributes', então normalizamos aqui.
+    if (!res.data) return [];
+    return res.data.map((comment: any) => ({ id: comment.id, ...comment.attributes }));
 }
 
 export async function getRelatedPosts(postId: number, tagSlug: string): Promise<CleanPost[]> {
