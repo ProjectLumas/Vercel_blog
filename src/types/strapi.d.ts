@@ -1,10 +1,11 @@
 // src/types/strapi.d.ts
+
+// A estrutura ideal e simples para uma imagem.
 interface CleanMedia {
-  id: number;
   url: string;
   alternativeText?: string | null;
-  name: string;
 }
+// A estrutura ideal e simples para uma tag e um autor.
 export interface CleanTag {
   id: number;
   Name: string;
@@ -13,9 +14,9 @@ export interface CleanTag {
 export interface CleanAuthor {
   id: number;
   Name: string;
-  // A API não está retornando a 'picture' para o autor no momento.
-  // picture: CleanMedia | null; 
+  picture: CleanMedia | null;
 }
+// O tipo do Post, 100% plano e fácil de usar.
 export interface CleanPost {
   id: number;
   Title: string;
@@ -25,7 +26,7 @@ export interface CleanPost {
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
-  Media: CleanMedia[] | null;
+  Media: CleanMedia | null;
   author: CleanAuthor | null;
   tags: CleanTag[];
 }

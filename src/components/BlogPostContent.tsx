@@ -5,12 +5,9 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 
 const PostBody = ({ content }: { content: any }) => {
-  const contentString = Array.isArray(content)
-    ? content.map((block: any) => block.children.map((child: any) => child.text).join('')).join('\n\n')
-    : '';
+  const contentString = Array.isArray(content) ? content.map((block: any) => block.children.map((child: any) => child.text).join('')).join('\n\n') : '';
   return (<div className="blog-content mx-auto"><ReactMarkdown>{contentString}</ReactMarkdown></div>);
 };
-
 export const BlogPostContent = ({ post }: { post: CleanPost | null }) => {
   if (!post) return null;
   const { Title, publishedAt, createdAt, Content, tags } = post;
