@@ -1,6 +1,7 @@
 // src/components/BlogPostPreview.tsx
 "use client";
 import { cn } from "@/lib/utils";
+import { getStrapiMedia } from "@/lib/strapi";
 import { CleanPost } from "@/types/strapi";
 import { formatDate } from "date-fns";
 import Image from "next/image";
@@ -10,7 +11,8 @@ import { FunctionComponent } from "react";
 const BlogPostPreviewItem: FunctionComponent<{ post: CleanPost }> = ({ post }) => {
   if (!post) return null;
   const { Title, Slug, Description, publishedAt, updatedAt, Media, tags } = post;
-  const imageUrl = Media?.[0]?.url;
+  const imageUrl = getStrapiMedia(Media);
+
   return (
     <div className="break-words">
       <Link href={`/blog/${Slug}`}><div className="aspect-[16/9] relative"><Image alt={Title || 'Imagem do post'} className="object-cover" src={imageUrl || "/images/placeholder.webp"} fill /></div></Link>

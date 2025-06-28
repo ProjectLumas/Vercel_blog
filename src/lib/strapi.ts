@@ -1,6 +1,7 @@
 // src/lib/strapi.ts
+
 import { config } from "@/config";
-import { CleanComment, CleanPost, CleanTag } from "@/types/strapi";
+import { CleanComment, CleanPost, CleanTag } from "@/types/strapi"; // Importações corretas
 
 function getStrapiURL(path = "") { return `${config.strapi.url}${path.startsWith('/') ? '' : '/'}${path}`; }
 
@@ -18,12 +19,13 @@ async function fetchApi(path: string, options = {}) {
 }
 
 export async function getPosts(params: { page?: number; limit?: number; tags?: string[] } = {}) {
-  const { page = 1, limit = 6, tags = [] } = params;
   const query = new URLSearchParams({
-    "sort[0]": "publishedAt:desc", "pagination[page]": page.toString(),
-    "pagination[pageSize]": limit.toString(), "populate": "*",
+    "sort[0]": "publishedAt:desc", "pagination[page]": String(params.page || 1),
+    "pagination[pageSize]": String(params.limit || 6), "populate": "*",
   });
-  if (tags.length > 0) tags.forEach((tag) => query.append(`filters[tags][Slug][$in]`, tag));
+  if (params.tags && params.tags.length > 0) {
+    params.tags.forEach((tag) => query.append(`filters[tags][Slug][$in]`, tag));
+  }
   return fetchApi(`/api/lumas-blogs?${query.toString()}`);
 }
 
@@ -45,15 +47,9 @@ export async function getTagBySlug(slug: string): Promise<CleanTag | null> {
 }
 
 export async function getComments(slug: string): Promise<CleanComment[]> {
-    const query = new URLSearchParams({ 
-        "filters[post][Slug][$eq]": slug, 
-        "sort[0]": "createdAt:asc",
-        "populate": "*" 
-    });
+    const query = new URLSearchParams({ "filters[post][Slug][$eq]": slug, "sort[0]": "createdAt:asc" });
     const res = await fetchApi(`/api/comments?${query.toString()}`);
-    // A API de comentários retorna com 'attributes', então normalizamos aqui.
-    if (!res.data) return [];
-    return res.data.map((comment: any) => ({ id: comment.id, ...comment.attributes }));
+    return res.data;
 }
 
 export async function getRelatedPosts(postId: number, tagSlug: string): Promise<CleanPost[]> {
@@ -70,4 +66,13 @@ export async function createComment(data: { author: string; email: string; conte
   const post = postRes.data?.[0];
   if (!post) throw new Error("Post não encontrado");
   return fetchApi('/api/comments', { method: 'POST', body: JSON.stringify({ data: { author: data.author, email: data.email, content: data.content, post: post.id } }) });
+}
+
+// --- FUNÇÃO ADICIONADA PARA LIDAR COM IMAGENS ---
+export function getStrapiMedia(media: { url: string }[] | null): string | null {
+  if (!media || media.length === 0) {
+    return null;
+  }
+  const { url } = media[0];
+  return url.startsWith("/") ? getStrapiURL(url) : url;
 }
