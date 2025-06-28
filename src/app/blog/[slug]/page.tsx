@@ -5,34 +5,35 @@ import { CommentSection } from "@/components/CommentSection";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { RelatedPosts } from "@/components/RelatedPosts";
-import { getPostBySlug, getPosts, getRelatedPosts, getStrapiMedia } from "@/lib/strapi";
+import { getPostBySlug, getPosts, getRelatedPosts } from "@/lib/strapi";
 import { CleanPost } from "@/types/strapi";
 import { notFound } from "next/navigation";
 import type { BlogPosting, WithContext } from "schema-dts";
 
+// Esta função diz ao Next.js para gerar as páginas de post no momento do build.
 export async function generateStaticParams() {
-  const result = await getPosts({ limit: 100 });
+  const result = await getPosts({ limit: 100 }); 
   const posts: CleanPost[] = result.data;
 
   return posts
-    .filter(post => post.Slug)
+    .filter(post => post.Slug) // Garante que posts sem slug não quebrem o build
     .map((post) => ({
       slug: post.Slug!,
     }));
 }
 
-// CORREÇÃO: A prop 'params' agora é um objeto simples, não mais uma Promise.
+// CORREÇÃO: A prop 'params' agora é um objeto simples, não uma Promise.
 interface PageProps {
   params: { slug: string };
 }
 
 export async function generateMetadata({ params }: PageProps) {
-  // CORREÇÃO: Acessamos 'params.slug' diretamente, sem 'await'.
+  // Acessamos 'params.slug' diretamente, sem 'await'.
   const post = await getPostBySlug(params.slug);
   if (!post) return { title: "Post não encontrado" };
   
   const { Title, Description, Media } = post;
-  const imageUrl = getStrapiMedia(Media);
+  const imageUrl = Media?.[0]?.url;
 
   return { 
     title: Title, 
@@ -42,7 +43,7 @@ export async function generateMetadata({ params }: PageProps) {
 }
 
 const Page = async ({ params }: PageProps) => {
-  // CORREÇÃO: Acessamos 'params.slug' diretamente, sem 'await'.
+  // Acessamos 'params.slug' diretamente.
   const { slug } = params;
   const post = await getPostBySlug(slug);
   if (!post) return notFound();
@@ -51,7 +52,7 @@ const Page = async ({ params }: PageProps) => {
   const firstTagSlug = tags?.[0]?.Slug;
   const relatedPosts = firstTagSlug ? await getRelatedPosts(post.id, firstTagSlug) : [];
   const authorName = author?.Name;
-  const postImage = getStrapiMedia(Media);
+  const postImage = Media?.[0]?.url;
 
   const jsonLd: WithContext<BlogPosting> = {
     "@context": "https://schema.org", "@type": "BlogPosting", headline: Title,
