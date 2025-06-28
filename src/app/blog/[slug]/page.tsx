@@ -10,25 +10,24 @@ import { CleanPost } from "@/types/strapi";
 import { notFound } from "next/navigation";
 import type { BlogPosting, WithContext } from "schema-dts";
 
-// FUNÇÃO ADICIONADA: Gera as páginas estáticas e resolve o erro 404.
 export async function generateStaticParams() {
   const result = await getPosts({ limit: 100 });
   const posts: CleanPost[] = result.data;
 
-  // Filtra posts que possam não ter um slug para evitar erros de build
   return posts
     .filter(post => post.Slug)
     .map((post) => ({
       slug: post.Slug!,
-  }));
+    }));
 }
 
-// Quando usamos generateStaticParams, a prop 'params' não é mais uma Promise
+// CORREÇÃO: A prop 'params' agora é um objeto simples, não mais uma Promise.
 interface PageProps {
   params: { slug: string };
 }
 
 export async function generateMetadata({ params }: PageProps) {
+  // CORREÇÃO: Acessamos 'params.slug' diretamente, sem 'await'.
   const post = await getPostBySlug(params.slug);
   if (!post) return { title: "Post não encontrado" };
   
@@ -43,6 +42,7 @@ export async function generateMetadata({ params }: PageProps) {
 }
 
 const Page = async ({ params }: PageProps) => {
+  // CORREÇÃO: Acessamos 'params.slug' diretamente, sem 'await'.
   const { slug } = params;
   const post = await getPostBySlug(slug);
   if (!post) return notFound();
