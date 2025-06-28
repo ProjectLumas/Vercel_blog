@@ -10,26 +10,35 @@ import { CleanPost } from "@/types/strapi";
 import { notFound } from "next/navigation";
 import type { BlogPosting, WithContext } from "schema-dts";
 
-// Esta função diz ao Next.js para gerar as páginas de post no momento do build.
 export async function generateStaticParams() {
-  const result = await getPosts({ limit: 100 }); 
+  const result = await getPosts({ limit: 100 });
   const posts: CleanPost[] = result.data;
-
   return posts
-    .filter(post => post.Slug) // Garante que posts sem slug não quebrem o build
+    .filter(post => post.Slug)
     .map((post) => ({
       slug: post.Slug!,
     }));
 }
 
-// CORREÇÃO: A prop 'params' agora é um objeto simples, não uma Promise.
+// CORREÇÃO: A tipagem agora aceita tanto a Promise quanto o objeto simples.
 interface PageProps {
-  params: { slug: string };
+  params: { slug: string } | Promise<{ slug: string }>;
 }
 
+// Função auxiliar para "desembrulhar" os parâmetros de forma segura.
+async function resolveParams(params: PageProps['params']): Promise<{ slug: string }> {
+    // Verifica se é uma Promise (se tem o método 'then') e a resolve.
+    if (typeof (params as Promise<any>).then === 'function') {
+        return await params;
+    }
+    // Se não for uma Promise, retorna o objeto diretamente.
+    return params as { slug: string };
+}
+
+
 export async function generateMetadata({ params }: PageProps) {
-  // Acessamos 'params.slug' diretamente, sem 'await'.
-  const post = await getPostBySlug(params.slug);
+  const resolvedParams = await resolveParams(params);
+  const post = await getPostBySlug(resolvedParams.slug);
   if (!post) return { title: "Post não encontrado" };
   
   const { Title, Description, Media } = post;
@@ -43,8 +52,8 @@ export async function generateMetadata({ params }: PageProps) {
 }
 
 const Page = async ({ params }: PageProps) => {
-  // Acessamos 'params.slug' diretamente.
-  const { slug } = params;
+  const resolvedParams = await resolveParams(params);
+  const { slug } = resolvedParams;
   const post = await getPostBySlug(slug);
   if (!post) return notFound();
 
