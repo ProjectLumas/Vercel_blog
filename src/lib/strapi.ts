@@ -1,7 +1,6 @@
 // src/lib/strapi.ts
-
 import { config } from "@/config";
-import { CleanComment, CleanPost, CleanTag } from "@/types/strapi"; // Importações corretas
+import { CleanComment, CleanPost, CleanTag } from "@/types/strapi";
 
 function getStrapiURL(path = "") { return `${config.strapi.url}${path.startsWith('/') ? '' : '/'}${path}`; }
 
@@ -28,30 +27,25 @@ export async function getPosts(params: { page?: number; limit?: number; tags?: s
   }
   return fetchApi(`/api/lumas-blogs?${query.toString()}`);
 }
-
 export async function getPostBySlug(slug: string): Promise<CleanPost | null> {
   const query = new URLSearchParams({ "filters[Slug][$eq]": slug, "populate": "*" });
   const res = await fetchApi(`/api/lumas-blogs?${query.toString()}`);
   return res.data?.[0] ?? null;
 }
-
 export async function getTags(): Promise<CleanTag[]> {
   const res = await fetchApi(`/api/tags`);
   return res.data;
 }
-
 export async function getTagBySlug(slug: string): Promise<CleanTag | null> {
   const query = new URLSearchParams({ "filters[Slug][$eq]": slug });
   const res = await fetchApi(`/api/tags?${query.toString()}`);
   return res.data?.[0] ?? null;
 }
-
 export async function getComments(slug: string): Promise<CleanComment[]> {
     const query = new URLSearchParams({ "filters[post][Slug][$eq]": slug, "sort[0]": "createdAt:asc" });
     const res = await fetchApi(`/api/comments?${query.toString()}`);
     return res.data;
 }
-
 export async function getRelatedPosts(postId: number, tagSlug: string): Promise<CleanPost[]> {
   const query = new URLSearchParams({
     "filters[tags][Slug][$eq]": tagSlug, "filters[id][$ne]": postId.toString(),
@@ -60,19 +54,16 @@ export async function getRelatedPosts(postId: number, tagSlug: string): Promise<
   const res = await fetchApi(`/api/lumas-blogs?${query.toString()}`);
   return res.data;
 }
-
 export async function createComment(data: { author: string; email: string; content: string; postSlug: string; }) {
   const postRes = await fetchApi(`/api/lumas-blogs?filters[Slug][$eq]=${data.postSlug}&fields[0]=id`);
   const post = postRes.data?.[0];
   if (!post) throw new Error("Post não encontrado");
   return fetchApi('/api/comments', { method: 'POST', body: JSON.stringify({ data: { author: data.author, email: data.email, content: data.content, post: post.id } }) });
 }
-
-// --- FUNÇÃO ADICIONADA PARA LIDAR COM IMAGENS ---
-export function getStrapiMedia(media: { url: string }[] | null): string | null {
-  if (!media || media.length === 0) {
-    return null;
+export function getStrapiMedia(media: any): string | null {
+  if (Array.isArray(media) && media.length > 0 && media[0].url) {
+    const { url } = media[0];
+    return url.startsWith("/") ? getStrapiURL(url) : url;
   }
-  const { url } = media[0];
-  return url.startsWith("/") ? getStrapiURL(url) : url;
+  return null;
 }

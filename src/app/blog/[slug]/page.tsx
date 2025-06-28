@@ -5,11 +5,12 @@ import { CommentSection } from "@/components/CommentSection";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { RelatedPosts } from "@/components/RelatedPosts";
-import { getPostBySlug, getPosts, getRelatedPosts } from "@/lib/strapi";
+import { getPostBySlug, getPosts, getRelatedPosts, getStrapiMedia } from "@/lib/strapi";
 import { CleanPost } from "@/types/strapi";
 import { notFound } from "next/navigation";
 import type { BlogPosting, WithContext } from "schema-dts";
 
+// FUNÇÃO ADICIONADA: Gera as páginas estáticas para evitar o erro 404.
 export async function generateStaticParams() {
   const result = await getPosts({ limit: 100 });
   const posts: CleanPost[] = result.data;
@@ -20,29 +21,18 @@ export async function generateStaticParams() {
     }));
 }
 
-// CORREÇÃO: A tipagem agora aceita tanto a Promise quanto o objeto simples.
+// CORREÇÃO: A prop 'params' não é mais uma Promise quando usamos generateStaticParams.
+// A tipagem agora reflete a realidade do componente.
 interface PageProps {
-  params: { slug: string } | Promise<{ slug: string }>;
+  params: { slug: string };
 }
-
-// Função auxiliar para "desembrulhar" os parâmetros de forma segura.
-async function resolveParams(params: PageProps['params']): Promise<{ slug: string }> {
-    // Verifica se é uma Promise (se tem o método 'then') e a resolve.
-    if (typeof (params as Promise<any>).then === 'function') {
-        return await params;
-    }
-    // Se não for uma Promise, retorna o objeto diretamente.
-    return params as { slug: string };
-}
-
 
 export async function generateMetadata({ params }: PageProps) {
-  const resolvedParams = await resolveParams(params);
-  const post = await getPostBySlug(resolvedParams.slug);
+  const post = await getPostBySlug(params.slug);
   if (!post) return { title: "Post não encontrado" };
   
   const { Title, Description, Media } = post;
-  const imageUrl = Media?.[0]?.url;
+  const imageUrl = getStrapiMedia(Media);
 
   return { 
     title: Title, 
@@ -52,8 +42,7 @@ export async function generateMetadata({ params }: PageProps) {
 }
 
 const Page = async ({ params }: PageProps) => {
-  const resolvedParams = await resolveParams(params);
-  const { slug } = resolvedParams;
+  const { slug } = params;
   const post = await getPostBySlug(slug);
   if (!post) return notFound();
 
@@ -61,7 +50,7 @@ const Page = async ({ params }: PageProps) => {
   const firstTagSlug = tags?.[0]?.Slug;
   const relatedPosts = firstTagSlug ? await getRelatedPosts(post.id, firstTagSlug) : [];
   const authorName = author?.Name;
-  const postImage = Media?.[0]?.url;
+  const postImage = getStrapiMedia(Media);
 
   const jsonLd: WithContext<BlogPosting> = {
     "@context": "https://schema.org", "@type": "BlogPosting", headline: Title,
