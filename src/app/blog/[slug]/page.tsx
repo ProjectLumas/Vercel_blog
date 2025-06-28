@@ -9,26 +9,34 @@ import { getPostBySlug, getPosts, getRelatedPosts, getStrapiMedia } from "@/lib/
 import { CleanPost } from "@/types/strapi";
 import { notFound } from "next/navigation";
 import type { BlogPosting, WithContext } from "schema-dts";
+import { use } from "react"; // Importando o hook 'use' do React
 
-// FUNÇÃO ADICIONADA: Gera as páginas estáticas para evitar o erro 404.
+// Esta função diz ao Next.js para gerar as páginas de post no momento do build.
 export async function generateStaticParams() {
-  const result = await getPosts({ limit: 100 });
-  const posts: CleanPost[] = result.data;
-  return posts
-    .filter(post => post.Slug)
-    .map((post) => ({
-      slug: post.Slug!,
-    }));
+  try {
+    const result = await getPosts({ limit: 100 });
+    const posts: CleanPost[] = result.data;
+
+    return posts
+      .filter(post => post.Slug) // Garante que posts sem slug não quebrem o build
+      .map((post) => ({
+        slug: post.Slug!,
+      }));
+  } catch (error) {
+    console.error("Falha ao gerar parâmetros estáticos:", error);
+    return [];
+  }
 }
 
-// CORREÇÃO: A prop 'params' não é mais uma Promise quando usamos generateStaticParams.
-// A tipagem agora reflete a realidade do componente.
+// CORREÇÃO: A 'prop' params é definida estritamente como uma Promise, como a Vercel exige.
 interface PageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps) {
-  const post = await getPostBySlug(params.slug);
+  // Usamos 'await' para resolver a Promise.
+  const resolvedParams = await params;
+  const post = await getPostBySlug(resolvedParams.slug);
   if (!post) return { title: "Post não encontrado" };
   
   const { Title, Description, Media } = post;
@@ -41,8 +49,19 @@ export async function generateMetadata({ params }: PageProps) {
   };
 }
 
-const Page = async ({ params }: PageProps) => {
-  const { slug } = params;
+const Page = ({ params }: PageProps) => {
+  // CORREÇÃO: Usamos o hook 'use' para "desembrulhar" a Promise de forma síncrona dentro do componente.
+  // Esta é a maneira moderna e correta de lidar com Promises em Server Components sem 'async/await' direto.
+  const resolvedParams = use(params);
+  const { slug } = resolvedParams;
+  
+  // Como a busca de dados é assíncrona, criamos um subcomponente para ela.
+  // Isso isola a lógica assíncrona e mantém o componente 'Page' principal síncrono.
+  return <PostPageContent slug={slug} />;
+};
+
+// Subcomponente assíncrono para buscar e renderizar os dados
+async function PostPageContent({ slug }: { slug: string }) {
   const post = await getPostBySlug(slug);
   if (!post) return notFound();
 
@@ -72,6 +91,6 @@ const Page = async ({ params }: PageProps) => {
       </div>
     </>
   );
-};
+}
 
 export default Page;
